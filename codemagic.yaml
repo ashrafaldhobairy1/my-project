@@ -1,18 +1,28 @@
 workflows:
-  build-apk:
-    name: Build Android APK
-    max_build_duration: 30
+  react-native-android:
+    name: React Native Android
+    max_build_duration: 120
+    instance_type: mac_mini_m2
     environment:
-      node: 18.16.0
-      java: 17
+      vars:
+        ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
+      node: "18.x"  # تحديد إصدارة Node.js
     scripts:
-      - name: Install dependencies
+      - name: Install Node.js and Yarn
         script: |
-          cd telon-gateway-app
-          npm install
-      - name: Build debug APK
+          nvm install 18
+          nvm use 18
+          npm install -g yarn
+      - name: Install project dependencies
         script: |
-          cd telon-gateway-app/android
+          cd telon-gsm-sip-gateway
+          yarn install
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/telon-gsm-sip-gateway/android/local.properties"
+      - name: Build Android debug APK
+        script: |
+          cd telon-gsm-sip-gateway/android
           ./gradlew assembleDebug
     artifacts:
-      - telon-gateway-app/android/app/build/outputs/**/*.apk
+      - telon-gsm-sip-gateway/android/app/build/outputs/apk/debug/*.apk
