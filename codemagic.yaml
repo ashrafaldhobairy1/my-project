@@ -9,7 +9,6 @@ workflows:
     scripts:
       - name: Install Node.js
         script: |
-          # تثبيت Node.js 18
           curl -o node-v18.20.2.pkg https://nodejs.org/dist/v18.20.2/node-v18.20.2.pkg
           sudo installer -pkg node-v18.20.2.pkg -target /
           export PATH="/usr/local/bin:$PATH"
@@ -18,37 +17,36 @@ workflows:
 
       - name: Install project dependencies
         script: |
-          # إنشاء package-lock.json إذا لم يكن موجوداً
           if [ ! -f package-lock.json ]; then
             npm install --legacy-peer-deps --package-lock-only
           fi
-          
           npm ci --legacy-peer-deps
           
-          # التحقق من هيكل المشروع
-          echo "Project structure:"
-          ls -la
+          # إنشاء gradlew إذا لم يكن موجوداً
+          if [ ! -f "android/gradlew" ]; then
+            echo "Generating gradlew wrapper..."
+            cd android
+            ./gradlew wrapper --gradle-version 7.5.1
+            cd ..
+          fi
+          
+          # منح صلاحيات التنفيذ
+          chmod +x android/gradlew
+          
+          # التحقق من الملفات
           echo "Android folder contents:"
-          ls -la android/ || true
+          ls -la android/
 
       - name: Set Android SDK location
         script: |
-          # إنشاء مجلد android إذا لم يكن موجوداً
           mkdir -p android
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
           echo "File created at: $(pwd)/android/local.properties"
-          cat android/local.properties
 
       - name: Build Android debug APK
         script: |
-          # الانتقال لمجلد android إذا كان موجوداً
-          if [ -d "android" ]; then
-            cd android
-            ./gradlew assembleDebug --stacktrace
-          else
-            echo "ERROR: android directory not found!"
-            ls -la
-            exit 1
-          fi
+          # الانتقال لمجلد android وتنفيذ البناء
+          cd android
+          ./gradlew assembleDebug --stacktrace
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
