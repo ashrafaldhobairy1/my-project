@@ -7,26 +7,23 @@ workflows:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
     scripts:
-      - name: Install Node.js and npm
+      - name: Install Node.js
         script: |
-          # تثبيت Node.js 18
-          curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n
-          chmod +x n
-          sudo ./n 18.20.2
-          
-          # إعداد المسارات
-          export N_PREFIX="$HOME/n"
-          export PATH="$N_PREFIX/bin:$PATH"
-          
-          # تحديث npm
-          npm install -g npm@latest
-          
+          # تثبيت Node.js 18 مباشرة بدون n
+          curl -o node-v18.20.2.pkg https://nodejs.org/dist/v18.20.2/node-v18.20.2.pkg
+          sudo installer -pkg node-v18.20.2.pkg -target /
+          export PATH="/usr/local/bin:$PATH"
           node -v
           npm -v
 
-      - name: Install project dependencies with npm
+      - name: Install project dependencies
         script: |
-          # استخدم npm بدلاً من yarn
+          # إنشاء package-lock.json إذا لم يكن موجوداً
+          if [ ! -f package-lock.json ]; then
+            npm install --legacy-peer-deps --package-lock-only
+          fi
+          
+          # تثبيت الاعتماديات باستخدام npm
           npm ci --legacy-peer-deps
 
       - name: Set Android SDK location
