@@ -26,11 +26,14 @@ workflows:
             curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o android/gradlew
             curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew.bat -o android/gradlew.bat
             
-            # تنزيل gradle-wrapper.jar من التوزيعة الرسمية
-            curl -L https://repo.maven.apache.org/maven2/org/glassfish/main/external/ant/4.1/ant-4.1.jar -o android/gradle/wrapper/gradle-wrapper.jar
+            # تنزيل توزيعة Gradle كاملة واستخراج الملفات المطلوبة
+            curl -L https://services.gradle.org/distributions/gradle-7.5.1-bin.zip -o gradle-bin.zip
+            unzip -q gradle-bin.zip
+            cp gradle-7.5.1/lib/gradle-wrapper.jar android/gradle/wrapper/
+            cp gradle-7.5.1/src/coreui/resources/terminal.png android/gradle/wrapper/  # ملف اختياري
+            rm -rf gradle-7.5.1 gradle-bin.zip
             
-            # إنشاء ملفات أساسية باستخدام echo
-            # gradle-wrapper.properties
+            # إنشاء ملفات أساسية
             echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
             echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
             echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-7.5.1-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
@@ -89,6 +92,7 @@ workflows:
           ls -la android/
           echo "Gradlew exists: $(ls android/gradlew 2>/dev/null && echo 'Yes' || echo 'No')"
           echo "gradle-wrapper.jar exists: $(ls android/gradle/wrapper/gradle-wrapper.jar 2>/dev/null && echo 'Yes' || echo 'No')"
+          echo "gradle-wrapper.jar size: $(ls -lh android/gradle/wrapper/gradle-wrapper.jar | awk '{print $5}')"
 
       - name: Install Node.js
         script: |
