@@ -30,16 +30,14 @@ workflows:
             curl -L https://repo.maven.apache.org/maven2/org/glassfish/main/external/ant/4.1/ant-4.1.jar -o android/gradle/wrapper/gradle-wrapper.jar
             
             # إنشاء ملفات أساسية بدون مسافات بادئة زائدة
-            cat > android/gradle/wrapper/gradle-wrapper.properties <<EOL
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOL
+            echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
+            echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
+            echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-7.5.1-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
+            echo "zipStoreBase=GRADLE_USER_HOME" >> android/gradle/wrapper/gradle-wrapper.properties
+            echo "zipStorePath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
 
             # كتابة محتوى أساسي لـ build.gradle في المستوى الأعلى
-            cat > android/build.gradle <<EOL
+            cat > android/build.gradle <<'EOL'
 buildscript {
     ext {
         buildToolsVersion = "33.0.0"
@@ -61,7 +59,7 @@ EOL
             echo "rootProject.name = 'YourProject'" > android/settings.gradle
             
             # كتابة محتوى أساسي لـ app/build.gradle
-            cat > android/app/build.gradle <<EOL
+            cat > android/app/build.gradle <<'EOL'
 apply plugin: "com.android.application"
 android {
     compileSdkVersion 33
@@ -76,7 +74,7 @@ android {
 EOL
 
             # كتابة محتوى أساسي لـ AndroidManifest.xml
-            cat > android/app/src/main/AndroidManifest.xml <<EOL
+            cat > android/app/src/main/AndroidManifest.xml <<'EOL'
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application />
@@ -111,7 +109,7 @@ EOL
           # تثبيت الاعتماديات الأساسية إذا لزم الأمر
           if [ ! -f "package.json" ]; then
             echo "Creating basic package.json..."
-            cat > package.json <<EOL
+            cat > package.json <<'EOL'
 {
   "name": "telon-gsm-sip-gateway",
   "version": "1.0.0",
