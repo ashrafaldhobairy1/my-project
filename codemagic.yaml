@@ -26,51 +26,54 @@ workflows:
             curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o android/gradlew
             curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew.bat -o android/gradlew.bat
             
+            # تنزيل gradle-wrapper.jar من التوزيعة الرسمية
+            curl -L https://repo.maven.apache.org/maven2/org/glassfish/main/external/ant/4.1/ant-4.1.jar -o android/gradle/wrapper/gradle-wrapper.jar
+            
             # إنشاء ملفات أساسية
             echo "distributionBase=GRADLE_USER_HOME
-            distributionPath=wrapper/dists
-            distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
-            zipStoreBase=GRADLE_USER_HOME
-            zipStorePath=wrapper/dists" > android/gradle/wrapper/gradle-wrapper.properties
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists" > android/gradle/wrapper/gradle-wrapper.properties
             
             # كتابة محتوى أساسي لـ build.gradle في المستوى الأعلى
             echo "buildscript {
-                ext {
-                    buildToolsVersion = \"33.0.0\"
-                    minSdkVersion = 21
-                    compileSdkVersion = 33
-                    targetSdkVersion = 33
-                }
-                repositories {
-                    google()
-                    mavenCentral()
-                }
-                dependencies {
-                    classpath(\"com.android.tools.build:gradle:7.3.1\")
-                }
-            }" > android/build.gradle
+    ext {
+        buildToolsVersion = \"33.0.0\"
+        minSdkVersion = 21
+        compileSdkVersion = 33
+        targetSdkVersion = 33
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath(\"com.android.tools.build:gradle:7.3.1\")
+    }
+}" > android/build.gradle
             
             # كتابة محتوى أساسي لـ settings.gradle
             echo "rootProject.name = 'YourProject'" > android/settings.gradle
             
             # كتابة محتوى أساسي لـ app/build.gradle
             echo "apply plugin: \"com.android.application\"
-            android {
-                compileSdkVersion 33
-                defaultConfig {
-                    applicationId \"com.yourproject\"
-                    minSdkVersion 21
-                    targetSdkVersion 33
-                    versionCode 1
-                    versionName \"1.0\"
-                }
-            }" > android/app/build.gradle
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId \"com.yourproject\"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName \"1.0\"
+    }
+}" > android/app/build.gradle
             
             # كتابة محتوى أساسي لـ AndroidManifest.xml
             echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-            <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
-                <application />
-            </manifest>" > android/app/src/main/AndroidManifest.xml
+<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
+    <application />
+</manifest>" > android/app/src/main/AndroidManifest.xml
             
             # منح صلاحيات التنفيذ
             chmod +x android/gradlew
@@ -84,6 +87,7 @@ workflows:
           echo "Android folder contents:"
           ls -la android/
           echo "Gradlew exists: $(ls android/gradlew 2>/dev/null && echo 'Yes' || echo 'No')"
+          echo "gradle-wrapper.jar exists: $(ls android/gradle/wrapper/gradle-wrapper.jar 2>/dev/null && echo 'Yes' || echo 'No')"
 
       - name: Install Node.js
         script: |
@@ -100,13 +104,13 @@ workflows:
           if [ ! -f "package.json" ]; then
             echo "Creating basic package.json..."
             echo '{
-              "name": "telon-gsm-sip-gateway",
-              "version": "1.0.0",
-              "dependencies": {
-                "react": "18.2.0",
-                "react-native": "0.72.6"
-              }
-            }' > package.json
+  "name": "telon-gsm-sip-gateway",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.72.6"
+  }
+}' > package.json
           fi
           
           npm install --legacy-peer-deps
@@ -129,6 +133,7 @@ workflows:
 
       - name: Build Android debug APK
         script: |
+          # الانتقال لمجلد android والبناء
           cd android
           ./gradlew assembleDebug --stacktrace
           
@@ -152,6 +157,10 @@ workflows:
             echo "APK not found! Build may have failed."
             echo "Searching for any APK files:"
             find . -name "*.apk" || echo "No APK files found"
+            
+            # فحص محتويات مجلد البناء
+            echo "Checking build output directory:"
+            ls -la android/app/build/outputs/apk/debug/ || true
             exit 1
           fi
     artifacts:
