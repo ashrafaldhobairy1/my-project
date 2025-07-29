@@ -7,25 +7,27 @@ workflows:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
     scripts:
-      - name: Install Node.js using n
+      - name: Install Node.js and compatible Yarn
         script: |
-          # تثبيت أداة n لإدارة إصدارات Node.js
+          # تثبيت Node.js 18
           curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n
           chmod +x n
-          sudo ./n 18.20.2  # تثبيت إصدار محدد بدقة
+          sudo ./n 18.20.2
           
           # إعداد المسارات
           export N_PREFIX="$HOME/n"
           export PATH="$N_PREFIX/bin:$PATH"
           
-          # تثبيت yarn
+          # تثبيت Yarn 1.x (الإصدار الكلاسيكي)
           npm install -g yarn@1.22.19
+          
           node -v
           yarn -v
 
       - name: Install project dependencies
         script: |
-          yarn install --frozen-lockfile
+          # استخدام الخيار الجديد --immutable
+          yarn install --immutable
 
       - name: Set Android SDK location
         script: |
