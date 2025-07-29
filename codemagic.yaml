@@ -22,15 +22,11 @@ workflows:
             mkdir -p android/app/src/main/res
             mkdir -p android/gradle/wrapper
             
-            # إنشاء ملفات أساسية
-            touch android/settings.gradle
-            touch android/build.gradle
-            touch android/gradlew
-            touch android/gradle/wrapper/gradle-wrapper.properties
-            touch android/app/build.gradle
-            touch android/app/src/main/AndroidManifest.xml
+            # تنزيل ملف gradlew الحقيقي من مستودع Gradle
+            curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o android/gradlew
+            curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew.bat -o android/gradlew.bat
             
-            # كتابة محتوى أساسي لـ gradle-wrapper.properties
+            # إنشاء ملفات أساسية
             echo "distributionBase=GRADLE_USER_HOME
             distributionPath=wrapper/dists
             distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
@@ -135,5 +131,28 @@ workflows:
         script: |
           cd android
           ./gradlew assembleDebug --stacktrace
+          
+      - name: Locate and Upload APK
+        script: |
+          # البحث عن ملف APK
+          APK_PATH=$(find . -name "app-debug.apk" | head -1)
+          
+          if [ -f "$APK_PATH" ]; then
+            echo "APK found at: $APK_PATH"
+            echo "File size: $(du -h "$APK_PATH" | cut -f1)"
+            
+            # رفع الملف إلى filebin.io
+            echo "Uploading APK to filebin.io..."
+            FILENAME=$(basename "$APK_PATH")
+            RESPONSE=$(curl -X POST -T "$APK_PATH" "https://filebin.net/?filename=${FILENAME}")
+            DOWNLOAD_URL=$(echo "$RESPONSE" | grep -o 'https://filebin.net/[^"]*')
+            
+            echo "Download URL: $DOWNLOAD_URL"
+          else
+            echo "APK not found! Build may have failed."
+            echo "Searching for any APK files:"
+            find . -name "*.apk" || echo "No APK files found"
+            exit 1
+          fi
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
