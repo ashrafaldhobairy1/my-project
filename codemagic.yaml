@@ -7,34 +7,79 @@ workflows:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
     scripts:
-      - name: Verify project structure
+      - name: Create Android project structure
         script: |
           echo "Current directory: $(pwd)"
           echo "Directory contents:"
           ls -la
           
-          # إنشاء مجلد android إذا كان مفقوداً
+          # إنشاء هيكل مجلدات Android إذا كان مفقوداً
           if [ ! -d "android" ]; then
-            echo "Android folder is missing! Creating a new React Native Android project..."
+            echo "Creating Android project structure from scratch..."
             
-            # إنشاء مشروع مؤقت باستخدام CLI الجديد
-            npx @react-native-community/cli init TempProject --version 0.72.6 --template react-native-template-typescript
+            # إنشاء الهيكل الأساسي
+            mkdir -p android/app/src/{main,debug}/java/com/yourproject
+            mkdir -p android/app/src/main/res
+            mkdir -p android/gradle/wrapper
             
-            # نسخ مجلد android من المشروع المؤقت
-            cp -R TempProject/android .
+            # إنشاء ملفات أساسية
+            touch android/settings.gradle
+            touch android/build.gradle
+            touch android/gradlew
+            touch android/gradle/wrapper/gradle-wrapper.properties
+            touch android/app/build.gradle
+            touch android/app/src/main/AndroidManifest.xml
             
-            # نسخ ملفات أساسية أخرى ضرورية
-            cp TempProject/package.json .
-            cp TempProject/babel.config.js .
-            cp TempProject/metro.config.js .
+            # كتابة محتوى أساسي لـ gradle-wrapper.properties
+            echo "distributionBase=GRADLE_USER_HOME
+            distributionPath=wrapper/dists
+            distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+            zipStoreBase=GRADLE_USER_HOME
+            zipStorePath=wrapper/dists" > android/gradle/wrapper/gradle-wrapper.properties
             
-            # تنظيف الملفات المؤقتة
-            rm -rf TempProject
+            # كتابة محتوى أساسي لـ build.gradle في المستوى الأعلى
+            echo "buildscript {
+                ext {
+                    buildToolsVersion = \"33.0.0\"
+                    minSdkVersion = 21
+                    compileSdkVersion = 33
+                    targetSdkVersion = 33
+                }
+                repositories {
+                    google()
+                    mavenCentral()
+                }
+                dependencies {
+                    classpath(\"com.android.tools.build:gradle:7.3.1\")
+                }
+            }" > android/build.gradle
             
-            # تثبيت الاعتماديات الأساسية
-            npm install react@18.2.0 react-native@0.72.6
+            # كتابة محتوى أساسي لـ settings.gradle
+            echo "rootProject.name = 'YourProject'" > android/settings.gradle
             
-            echo "Android project created successfully!"
+            # كتابة محتوى أساسي لـ app/build.gradle
+            echo "apply plugin: \"com.android.application\"
+            android {
+                compileSdkVersion 33
+                defaultConfig {
+                    applicationId \"com.yourproject\"
+                    minSdkVersion 21
+                    targetSdkVersion 33
+                    versionCode 1
+                    versionName \"1.0\"
+                }
+            }" > android/app/build.gradle
+            
+            # كتابة محتوى أساسي لـ AndroidManifest.xml
+            echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+            <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
+                <application />
+            </manifest>" > android/app/src/main/AndroidManifest.xml
+            
+            # منح صلاحيات التنفيذ
+            chmod +x android/gradlew
+            
+            echo "Basic Android project structure created!"
           else
             echo "Android folder exists. Continuing..."
           fi
@@ -44,14 +89,30 @@ workflows:
           ls -la android/
           echo "Gradlew exists: $(ls android/gradlew 2>/dev/null && echo 'Yes' || echo 'No')"
 
-      - name: Install Node.js and dependencies
+      - name: Install Node.js
         script: |
           # تثبيت Node.js 18
           curl -o node-v18.20.2.pkg https://nodejs.org/dist/v18.20.2/node-v18.20.2.pkg
           sudo installer -pkg node-v18.20.2.pkg -target /
           export PATH="/usr/local/bin:$PATH"
+          node -v
+          npm -v
+
+      - name: Install project dependencies
+        script: |
+          # تثبيت الاعتماديات الأساسية إذا لزم الأمر
+          if [ ! -f "package.json" ]; then
+            echo "Creating basic package.json..."
+            echo '{
+              "name": "telon-gsm-sip-gateway",
+              "version": "1.0.0",
+              "dependencies": {
+                "react": "18.2.0",
+                "react-native": "0.72.6"
+              }
+            }' > package.json
+          fi
           
-          # تثبيت الاعتماديات
           npm install --legacy-peer-deps
           
           # إنشاء ملفات Gradle إذا لزم الأمر
@@ -62,7 +123,6 @@ workflows:
             cd ..
           fi
           
-          # منح صلاحيات التنفيذ
           chmod +x android/gradlew
 
       - name: Set Android SDK location
