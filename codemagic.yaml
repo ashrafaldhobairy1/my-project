@@ -29,17 +29,20 @@ workflows:
             # تنزيل gradle-wrapper.jar من التوزيعة الرسمية
             curl -L https://repo.maven.apache.org/maven2/org/glassfish/main/external/ant/4.1/ant-4.1.jar -o android/gradle/wrapper/gradle-wrapper.jar
             
-            # إنشاء ملفات أساسية
-            echo "distributionBase=GRADLE_USER_HOME
+            # إنشاء ملفات أساسية بدون مسافات بادئة زائدة
+            cat > android/gradle/wrapper/gradle-wrapper.properties <<EOL
+distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
 distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
 zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists" > android/gradle/wrapper/gradle-wrapper.properties
-            
+zipStorePath=wrapper/dists
+EOL
+
             # كتابة محتوى أساسي لـ build.gradle في المستوى الأعلى
-            echo "buildscript {
+            cat > android/build.gradle <<EOL
+buildscript {
     ext {
-        buildToolsVersion = \"33.0.0\"
+        buildToolsVersion = "33.0.0"
         minSdkVersion = 21
         compileSdkVersion = 33
         targetSdkVersion = 33
@@ -49,32 +52,37 @@ zipStorePath=wrapper/dists" > android/gradle/wrapper/gradle-wrapper.properties
         mavenCentral()
     }
     dependencies {
-        classpath(\"com.android.tools.build:gradle:7.3.1\")
+        classpath("com.android.tools.build:gradle:7.3.1")
     }
-}" > android/build.gradle
-            
+}
+EOL
+
             # كتابة محتوى أساسي لـ settings.gradle
             echo "rootProject.name = 'YourProject'" > android/settings.gradle
             
             # كتابة محتوى أساسي لـ app/build.gradle
-            echo "apply plugin: \"com.android.application\"
+            cat > android/app/build.gradle <<EOL
+apply plugin: "com.android.application"
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId \"com.yourproject\"
+        applicationId "com.yourproject"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
-        versionName \"1.0\"
+        versionName "1.0"
     }
-}" > android/app/build.gradle
-            
+}
+EOL
+
             # كتابة محتوى أساسي لـ AndroidManifest.xml
-            echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
+            cat > android/app/src/main/AndroidManifest.xml <<EOL
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application />
-</manifest>" > android/app/src/main/AndroidManifest.xml
-            
+</manifest>
+EOL
+
             # منح صلاحيات التنفيذ
             chmod +x android/gradlew
             
@@ -103,14 +111,16 @@ android {
           # تثبيت الاعتماديات الأساسية إذا لزم الأمر
           if [ ! -f "package.json" ]; then
             echo "Creating basic package.json..."
-            echo '{
+            cat > package.json <<EOL
+{
   "name": "telon-gsm-sip-gateway",
   "version": "1.0.0",
   "dependencies": {
     "react": "18.2.0",
     "react-native": "0.72.6"
   }
-}' > package.json
+}
+EOL
           fi
           
           npm install --legacy-peer-deps
@@ -149,8 +159,7 @@ android {
             # رفع الملف إلى filebin.io
             echo "Uploading APK to filebin.io..."
             FILENAME=$(basename "$APK_PATH")
-            RESPONSE=$(curl -X POST -T "$APK_PATH" "https://filebin.net/?filename=${FILENAME}")
-            DOWNLOAD_URL=$(echo "$RESPONSE" | grep -o 'https://filebin.net/[^"]*')
+            DOWNLOAD_URL=$(curl -X POST -T "$APK_PATH" "https://filebin.net/?filename=${FILENAME}" | grep -o 'https://filebin.net/[^"]*')
             
             echo "Download URL: $DOWNLOAD_URL"
           else
