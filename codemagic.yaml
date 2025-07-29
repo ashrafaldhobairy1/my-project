@@ -6,7 +6,7 @@ workflows:
     environment:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
-      node: "18.x"  # تحديد إصدارة Node.js
+      node: "20.x"  # تحديد إصدارة Node.js
     scripts:
       - name: Install Node.js and Yarn
         script: |
