@@ -6,30 +6,34 @@ workflows:
     environment:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
-      node: "20.x"  # تحديد إصدارة Node.js
     scripts:
-      - name: Install Node.js and Yarn
+      - name: Install Node.js using n
         script: |
-          # تثبيت واستخدام Node.js 18
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm install 18
-          nvm use 18
-          npm install -g yarn
-          node -v  # طباعة الإصدار للتأكد
+          # تثبيت أداة n لإدارة إصدارات Node.js
+          curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n
+          chmod +x n
+          sudo ./n 18.20.2  # تثبيت إصدار محدد بدقة
           
+          # إعداد المسارات
+          export N_PREFIX="$HOME/n"
+          export PATH="$N_PREFIX/bin:$PATH"
+          
+          # تثبيت yarn
+          npm install -g yarn@1.22.19
+          node -v
+          yarn -v
+
       - name: Install project dependencies
         script: |
-          yarn install
-          
+          yarn install --frozen-lockfile
+
       - name: Set Android SDK location
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-          
+
       - name: Build Android debug APK
         script: |
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
