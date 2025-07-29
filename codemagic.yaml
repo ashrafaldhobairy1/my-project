@@ -142,9 +142,15 @@ workflows:
 
       - name: Build Android debug APK
         script: |
+          # تثبيت Gradle مباشرة
+          GRADLE_VERSION=7.5.1
+          curl -L https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle-bin.zip
+          unzip -q gradle-bin.zip
+          export PATH="$(pwd)/gradle-${GRADLE_VERSION}/bin:$PATH"
+          
           # الانتقال لمجلد android والبناء
           cd android
-          ./gradlew assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace
           
       - name: Locate and Upload APK
         script: |
