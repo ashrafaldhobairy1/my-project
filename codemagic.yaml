@@ -10,19 +10,26 @@ workflows:
     scripts:
       - name: Install Node.js and Yarn
         script: |
+          # تثبيت واستخدام Node.js 18
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           nvm install 18
           nvm use 18
           npm install -g yarn
+          node -v  # طباعة الإصدار للتأكد
+          
       - name: Install project dependencies
         script: |
-          cd telon-gsm-sip-gateway
           yarn install
+          
       - name: Set Android SDK location
         script: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/telon-gsm-sip-gateway/android/local.properties"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          
       - name: Build Android debug APK
         script: |
-          cd telon-gsm-sip-gateway/android
+          cd android
           ./gradlew assembleDebug
     artifacts:
-      - telon-gsm-sip-gateway/android/app/build/outputs/apk/debug/*.apk
+      - android/app/build/outputs/apk/debug/*.apk
