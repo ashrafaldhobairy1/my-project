@@ -7,8 +7,37 @@ workflows:
       vars:
         ANDROID_SDK_ROOT: "/Users/builder/programs/android-sdk"
     scripts:
+      - name: Verify project structure
+        script: |
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          
+          # إنشاء مجلد android إذا كان مفقوداً
+          if [ ! -d "android" ]; then
+            echo "Android folder is missing! Creating a new React Native Android project..."
+            
+            # إنشاء مشروع مؤقت
+            npx react-native init TempProject --version 0.72.6 --template react-native-template-typescript
+            
+            # نسخ مجلد android من المشروع المؤقت
+            cp -R TempProject/android .
+            
+            # تنظيف الملفات المؤقتة
+            rm -rf TempProject
+            
+            echo "Android project created successfully!"
+          else
+            echo "Android folder exists. Continuing..."
+          fi
+          
+          # التحقق من محتويات مجلد android
+          echo "Android folder contents:"
+          ls -la android/
+
       - name: Install Node.js
         script: |
+          # تثبيت Node.js 18
           curl -o node-v18.20.2.pkg https://nodejs.org/dist/v18.20.2/node-v18.20.2.pkg
           sudo installer -pkg node-v18.20.2.pkg -target /
           export PATH="/usr/local/bin:$PATH"
@@ -17,12 +46,10 @@ workflows:
 
       - name: Install project dependencies
         script: |
-          if [ ! -f package-lock.json ]; then
-            npm install --legacy-peer-deps --package-lock-only
-          fi
-          npm ci --legacy-peer-deps
+          # تثبيت الاعتماديات
+          npm install --legacy-peer-deps
           
-          # إنشاء gradlew إذا لم يكن موجوداً
+          # إنشاء ملفات Gradle إذا لزم الأمر
           if [ ! -f "android/gradlew" ]; then
             echo "Generating gradlew wrapper..."
             cd android
@@ -32,20 +59,15 @@ workflows:
           
           # منح صلاحيات التنفيذ
           chmod +x android/gradlew
-          
-          # التحقق من الملفات
-          echo "Android folder contents:"
-          ls -la android/
 
       - name: Set Android SDK location
         script: |
-          mkdir -p android
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-          echo "File created at: $(pwd)/android/local.properties"
+          echo "Local properties file content:"
+          cat android/local.properties
 
       - name: Build Android debug APK
         script: |
-          # الانتقال لمجلد android وتنفيذ البناء
           cd android
           ./gradlew assembleDebug --stacktrace
     artifacts:
