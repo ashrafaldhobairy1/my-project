@@ -9,173 +9,96 @@ workflows:
     scripts:
       - name: Create Android project structure
         script: |
-          echo "Current directory: $(pwd)"
-          echo "Directory contents:"
-          ls -la
-          
-          # إنشاء هيكل مجلدات Android إذا كان مفقوداً
+          echo "Creating Android project structure..."
           if [ ! -d "android" ]; then
-            echo "Creating Android project structure from scratch..."
-            
-            # إنشاء الهيكل الأساسي
-            mkdir -p android/app/src/{main,debug}/java/com/yourproject
+            mkdir -p android/app/src/main/java/com/yourproject
             mkdir -p android/app/src/main/res
             mkdir -p android/gradle/wrapper
-            
-            # تنزيل ملفات Gradle مباشرة من المصدر الرسمي
-            curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o android/gradlew
-            curl -L https://raw.githubusercontent.com/gradle/gradle/master/gradlew.bat -o android/gradlew.bat
-            
-            # تنزيل توزيعة Gradle كاملة واستخراج الملفات المطلوبة
-            GRADLE_VERSION=7.5.1
-            curl -L https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle-bin.zip
-            unzip -q gradle-bin.zip
-            cp gradle-${GRADLE_VERSION}/lib/gradle-wrapper.jar android/gradle/wrapper/
-            rm -rf gradle-${GRADLE_VERSION} gradle-bin.zip
-            
-            # إنشاء ملفات أساسية
-            echo "distributionBase=GRADLE_USER_HOME" > android/gradle/wrapper/gradle-wrapper.properties
-            echo "distributionPath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
-            echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" >> android/gradle/wrapper/gradle-wrapper.properties
-            echo "zipStoreBase=GRADLE_USER_HOME" >> android/gradle/wrapper/gradle-wrapper.properties
-            echo "zipStorePath=wrapper/dists" >> android/gradle/wrapper/gradle-wrapper.properties
-            
-            # build.gradle (الملف الرئيسي)
-            echo "buildscript {" > android/build.gradle
-            echo "    ext {" >> android/build.gradle
-            echo "        buildToolsVersion = \"33.0.0\"" >> android/build.gradle
-            echo "        minSdkVersion = 21" >> android/build.gradle
-            echo "        compileSdkVersion = 33" >> android/build.gradle
-            echo "        targetSdkVersion = 33" >> android/build.gradle
-            echo "    }" >> android/build.gradle
-            echo "    repositories {" >> android/build.gradle
-            echo "        google()" >> android/build.gradle
-            echo "        mavenCentral()" >> android/build.gradle
-            echo "    }" >> android/build.gradle
-            echo "    dependencies {" >> android/build.gradle
-            echo "        classpath(\"com.android.tools.build:gradle:7.3.1\")" >> android/build.gradle
-            echo "    }" >> android/build.gradle
-            echo "}" >> android/build.gradle
-            
-            # settings.gradle
+
+            touch android/settings.gradle
+            touch android/build.gradle
+            touch android/gradlew
+            touch android/gradle/wrapper/gradle-wrapper.properties
+            touch android/app/build.gradle
+            touch android/app/src/main/AndroidManifest.xml
+            touch android/app/src/main/java/com/yourproject/MainActivity.java
+
+            echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip" > android/gradle/wrapper/gradle-wrapper.properties
+            echo "buildscript {
+                repositories {
+                    google()
+                    mavenCentral()
+                }
+                dependencies {
+                    classpath(\"com.android.tools.build:gradle:7.3.1\")
+                }
+            }" > android/build.gradle
             echo "rootProject.name = 'YourProject'" > android/settings.gradle
-            
-            # app/build.gradle
-            echo "apply plugin: \"com.android.application\"" > android/app/build.gradle
-            echo "android {" >> android/app/build.gradle
-            echo "    compileSdkVersion 33" >> android/app/build.gradle
-            echo "    defaultConfig {" >> android/app/build.gradle
-            echo "        applicationId \"com.yourproject\"" >> android/app/build.gradle
-            echo "        minSdkVersion 21" >> android/app/build.gradle
-            echo "        targetSdkVersion 33" >> android/app/build.gradle
-            echo "        versionCode 1" >> android/app/build.gradle
-            echo "        versionName \"1.0\"" >> android/app/build.gradle
-            echo "    }" >> android/app/build.gradle
-            echo "}" >> android/app/build.gradle
-            
-            # AndroidManifest.xml
-            echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>" > android/app/src/main/AndroidManifest.xml
-            echo "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">" >> android/app/src/main/AndroidManifest.xml
-            echo "    <application />" >> android/app/src/main/AndroidManifest.xml
-            echo "</manifest>" >> android/app/src/main/AndroidManifest.xml
-            
-            # منح صلاحيات التنفيذ
+            echo "apply plugin: \"com.android.application\"
+            android {
+                compileSdkVersion 33
+                defaultConfig {
+                    applicationId \"com.yourproject\"
+                    minSdkVersion 21
+                    targetSdkVersion 33
+                    versionCode 1
+                    versionName \"1.0\"
+                }
+            }
+            dependencies {
+                implementation 'com.facebook.react:react-native:+'
+            }" > android/app/build.gradle
+            echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+            <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
+                <application>
+                    <activity android:name=\".MainActivity\" />
+                </application>
+            </manifest>" > android/app/src/main/AndroidManifest.xml
+            echo "package com.yourproject;
+            import com.facebook.react.ReactActivity;
+            public class MainActivity extends ReactActivity {
+                @Override
+                protected String getMainComponentName() {
+                    return \"YourProject\";
+                }
+            }" > android/app/src/main/java/com/yourproject/MainActivity.java
+
             chmod +x android/gradlew
-            
-            echo "Basic Android project structure created!"
-            
-            # التحقق من الملفات
-            echo "gradle-wrapper.jar size: $(du -sh android/gradle/wrapper/gradle-wrapper.jar)"
-          else
-            echo "Android folder exists. Continuing..."
+            echo "Android structure created!"
           fi
-          
-          # التحقق من محتويات مجلد android
-          echo "Android folder contents:"
-          ls -la android/
           echo "Gradlew exists: $(ls android/gradlew 2>/dev/null && echo 'Yes' || echo 'No')"
-          echo "gradle-wrapper.jar exists: $(ls android/gradle/wrapper/gradle-wrapper.jar 2>/dev/null && echo 'Yes' || echo 'No')"
 
       - name: Install Node.js
         script: |
-          # تثبيت Node.js 18
           curl -o node-v18.20.2.pkg https://nodejs.org/dist/v18.20.2/node-v18.20.2.pkg
           sudo installer -pkg node-v18.20.2.pkg -target /
           export PATH="/usr/local/bin:$PATH"
           node -v
-          npm -v
 
       - name: Install project dependencies
         script: |
-          # تثبيت الاعتماديات الأساسية إذا لزم الأمر
-          if [ ! -f "package.json" ]; then
-            echo "Creating basic package.json..."
-            echo '{' > package.json
-            echo '  "name": "telon-gsm-sip-gateway",' >> package.json
-            echo '  "version": "1.0.0",' >> package.json
-            echo '  "dependencies": {' >> package.json
-            echo '    "react": "18.2.0",' >> package.json
-            echo '    "react-native": "0.72.6"' >> package.json
-            echo '  }' >> package.json
-            echo '}' >> package.json
-          fi
-          
+          echo '{
+            "name": "telon-gsm-sip-gateway",
+            "version": "1.0.0",
+            "dependencies": {
+              "react": "18.2.0",
+              "react-native": "0.72.6",
+              "@react-native-community/cli": "^11.0.0"
+            }
+          }' > package.json
           npm install --legacy-peer-deps
-          
-          # التأكد من وجود gradle-wrapper.jar
-          if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "Downloading missing gradle-wrapper.jar..."
-            GRADLE_VERSION=7.5.1
-            curl -L https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle-bin.zip
-            unzip -q gradle-bin.zip
-            cp gradle-${GRADLE_VERSION}/lib/gradle-wrapper.jar android/gradle/wrapper/
-            rm -rf gradle-${GRADLE_VERSION} gradle-bin.zip
-          fi
-          
-          chmod +x android/gradlew
+          npm ls react react-native @react-native-community/cli
 
       - name: Set Android SDK location
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-          echo "Local properties file content:"
-          cat android/local.properties
 
       - name: Build Android debug APK
         script: |
-          # تثبيت Gradle مباشرة
-          GRADLE_VERSION=7.5.1
-          curl -L https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle-bin.zip
-          unzip -q gradle-bin.zip
-          export PATH="$(pwd)/gradle-${GRADLE_VERSION}/bin:$PATH"
-          
-          # الانتقال لمجلد android والبناء
+          echo "Starting APK build..."
           cd android
-          gradle assembleDebug --stacktrace
-          
-      - name: Locate and Upload APK
-        script: |
-          # البحث عن ملف APK
-          APK_PATH=$(find . -name "app-debug.apk" | head -1)
-          
-          if [ -f "$APK_PATH" ]; then
-            echo "APK found at: $APK_PATH"
-            echo "File size: $(du -h "$APK_PATH" | cut -f1)"
-            
-            # رفع الملف إلى filebin.io
-            echo "Uploading APK to filebin.io..."
-            FILENAME=$(basename "$APK_PATH")
-            DOWNLOAD_URL=$(curl -X POST -T "$APK_PATH" "https://filebin.net/?filename=${FILENAME}" | grep -o 'https://filebin.net/[^"]*')
-            
-            echo "Download URL: $DOWNLOAD_URL"
-          else
-            echo "APK not found! Build may have failed."
-            echo "Searching for any APK files:"
-            find . -name "*.apk" || echo "No APK files found"
-            
-            # فحص محتويات مجلد البناء
-            echo "Checking build output directory:"
-            ls -la android/app/build/outputs/apk/debug/ || true
-            exit 1
-          fi
+          ./gradlew assembleDebug --stacktrace
+          echo "Checking APK output..."
+          ls -la app/build/outputs/apk/debug/
     artifacts:
-      - android/app/build/outputs/apk/debug/*.apk
+      - android/app/build/outputs/apk/**/*.apk
